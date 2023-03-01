@@ -9,7 +9,7 @@ namespace ChangeLogFormatterTest
 {
 	public class ChangeLogFormatterTests
 	{
-		Parser _parser = new Parser();
+		Parser _parser = new Parser(Parser.OutputType.Text);
 		StreamWriter _output;
 
 		[SetUp]
@@ -21,66 +21,52 @@ namespace ChangeLogFormatterTest
 		[Test]
 		public void NoTag()
 		{
-			_parser.Parse(new[] { "24/02/23 Message" }, _output, Parser.OutputType.Text);
-
-			var results = Content(_output);
-			Assert.IsEmpty(results[0]);
+			_parser.Parse(new[] { "24/02/23 Message" }, _output);
+			Assert.IsEmpty(Content(_output)[0]);
 		}
 
 		[Test]
 		public void BadParse()
 		{
-			_parser.Parse(new[] { "Foobar" }, _output, Parser.OutputType.Text);
-
-			var results = Content(_output);
-			Assert.IsEmpty(results[0]);
+			_parser.Parse(new[] { "Foobar" }, _output);
+			Assert.IsEmpty(Content(_output)[0]);
 		}
 
 
 		[Test]
 		public void Tag()
 		{
-			_parser.Parse(new[] { "24/02/23 (tag: 1.0.1) Message" }, _output, Parser.OutputType.Text);
-
-			var results = Content(_output);
-			Assert.True(results[0].StartsWith("1.0.1"));
+			_parser.Parse(new[] { "24/02/23 (tag: 1.0.1) Message" }, _output);
+			Assert.AreEqual("1.0.1 24 February 2023\r", Content(_output)[0]);
 		}
 
 		[Test]
 		public void Tags_HeadMaster()
 		{
-			_parser.Parse(new[] { "24/02/23 (HEAD -> master, tag: 1.0.2) Message" }, _output, Parser.OutputType.Text);
-
-			var results = Content(_output);
-			Assert.True(results[0].StartsWith("1.0.2"));
+			_parser.Parse(new[] { "24/02/23 (HEAD -> master, tag: 1.0.2) Message" }, _output);
+			Assert.AreEqual("1.0.2 24 February 2023\r", Content(_output)[0]);
 		}
 
 		[Test]
 		public void Tag_OriginMaster()
 		{
-			_parser.Parse(new[] { "24/02/23 (tag: 1.0.3, origin/master) Message" }, _output, Parser.OutputType.Text);
-
-			var results = Content(_output);
-			Assert.True(results[0].StartsWith("1.0.3"));
+			_parser.Parse(new[] { "24/02/23 (tag: 1.0.3, origin/master) Message" }, _output);
+			Assert.AreEqual("1.0.3, origin/master 24 February 2023\r", Content(_output)[0]);
 		}
 
 
 		[Test]
 		public void Tag_headMaster_OriginMaster()
 		{
-			_parser.Parse(new[] { "24/02/23 (HEAD -> master, tag: 1.0.4, origin/master) Message" }, _output, Parser.OutputType.Text);
-
-			var results = Content(_output);
-			Assert.True(results[0].StartsWith("1.0.4"));
+			_parser.Parse(new[] { "24/02/23 (HEAD -> master, tag: 1.0.4, origin/master) Message" }, _output);
+			Assert.AreEqual("1.0.4, origin/master 24 February 2023\r", Content(_output)[0]);
 		}
 
 		[Test]
 		public void Tag_headMaster_OriginMaster_OriginHead()
 		{
-			_parser.Parse(new[] { "24/02/23 (HEAD -> master, tag: 1.0.5, origin/master, origin/HEAD) Message" }, _output, Parser.OutputType.Text);
-
-			var results = Content(_output);
-			Assert.True(results[0].StartsWith("1.0.5"));
+			_parser.Parse(new[] { "24/02/23 (HEAD -> master, tag: 1.0.5, origin/master, origin/HEAD) Message" }, _output);
+			Assert.AreEqual("1.0.5, origin/master, origin/HEAD 24 February 2023\r", Content(_output)[0]);
 		}
 
 

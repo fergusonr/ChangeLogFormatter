@@ -38,7 +38,7 @@ namespace ChangeLogFormatter
 			 */
 
 			// Indispensable --> https://regex101.com
-			var re = new Regex(@"^(\d+\/\d+\/\d+)\s+(\(([[\w\s\->,])*tag:\s(.+)([[\w\s\->,])*\))*\s+(.*)");
+			var re = new Regex(@"^(\d+\/\d+\/\d+)\s+(\(([[\w\s\-\/>,])*tag:\s(.+),*([[\w\s\-\/>,])*\))*\s+(.*)");
 			(string Tag, DateTime Date) currentTag = ("", DateTime.MinValue);
 
 			foreach (var line in lines)
