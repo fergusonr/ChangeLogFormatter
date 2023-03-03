@@ -28,9 +28,11 @@ namespace ChangeLogFormatter
 
 			if(fileArgs.Any() && File.Exists(fileArgs.First()))
 			{
-				var outStream = fileArgs.Count() == 2 ? new StreamWriter(fileArgs.Last()) : Console.Out;
-				parser.Parse(File.ReadAllLines(fileArgs.First()), outStream);
-				outStream.Close();
+				using (TextWriter outStream = fileArgs.Count() == 2 ? new StreamWriter(fileArgs.Last()) : Console.Out)
+				{ 
+					if (!parser.Parse(File.ReadAllLines(fileArgs.First()), outStream))
+						Console.WriteLine("Error: No tags found");
+				}
 			}
 			else
 			{
@@ -40,7 +42,8 @@ namespace ChangeLogFormatter
 				while ((line = Console.ReadLine()) != null)
 					input.Add(line);
 
-				parser.Parse(input.ToArray(), Console.Out);
+				if(!parser.Parse(input.ToArray(), Console.Out))
+					Console.WriteLine("Error: No tags found");
 			}
 		}
 	}

@@ -23,7 +23,7 @@ namespace ChangeLogFormatter
 		/// </summary>
 		/// <param name="lines"></param>
 		/// <param name="outStream"></param>
-		public void Parse(string[] lines, TextWriter outStream)
+		public bool Parse(string[] lines, TextWriter outStream)
 		{
 			/* Example log.........
 			 
@@ -37,8 +37,8 @@ namespace ChangeLogFormatter
 			  18/10/22  (tag: v17.4.0-preview-22518-02) Final release branding for 17.4 (#8015)
 			 */
 
-			// Indispensable --> https://regex101.com
-			var re = new Regex(@"^(\d+\/\d+\/\d+)\s+(\(([[\w\s\-\/>,])*tag:\s(.+),*([[\w\s\-\/>,])*\))*\s+(.*)");
+			// Indispensable! --> https://regex101.com
+			var re = new Regex(@"^(\d+\/\d+\/\d+)\s+(?:\(([[\w\s\-\/>,])*tag:\s(.+)\))*\s+(.*)");
 			(string Tag, DateTime Date) currentTag = ("", DateTime.MinValue);
 
 			foreach (var line in lines)
@@ -49,8 +49,8 @@ namespace ChangeLogFormatter
 					continue;
 
 				var date = DateTime.Parse(match.Groups[1].ToString());
-				var tag = match.Groups[4].ToString();
-				var message = match.Groups[6].ToString();
+				var tag = match.Groups[3].ToString();
+				var message = match.Groups[4].ToString();
 
 				if (tag != "")
 					currentTag = (tag, date);
@@ -65,10 +65,7 @@ namespace ChangeLogFormatter
 			}
 
 			if (currentTag.Date == DateTime.MinValue)
-			{
-				Console.WriteLine("Error: No tags found");
-				return;
-			}
+				return false; // no tags found
 
 			if (_outputType == OutputType.Html)
 			{
@@ -112,6 +109,8 @@ namespace ChangeLogFormatter
 			}
 
 			_data.Clear();
+
+			return true;
 		}
 	}
 }
