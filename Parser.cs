@@ -10,7 +10,7 @@ namespace ChangeLogFormatter
 	{
 		public enum OutputType { Text, Html, Markdown };
 
-		private readonly Dictionary<(string Tag, DateTime Date), List<string>> _data = new Dictionary<(string, DateTime), List<string>>();
+		private readonly Dictionary<(string Tag, string Branch, DateTime Date), List<string>> _data = new Dictionary<(string, string, DateTime), List<string>>();
 		private OutputType _outputType;
 
 		public Parser(OutputType type)
@@ -38,8 +38,10 @@ namespace ChangeLogFormatter
 			 */
 
 			// Indispensable! --> https://regex101.com
-			var re = new Regex(@"^(\d+\/\d+\/\d+)\s+(?:\(([[\w\s\-\/>,])*tag:\s(.+)\))*\s+(.*)");
-			(string Tag, DateTime Date) currentTag = ("", DateTime.MinValue);
+			// https://docs.github.com/en/get-started/using-git/dealing-with-special-characters-in-branch-and-tag-names
+			//
+			var re = new Regex(@"^(\d+\/\d+\/\d+)\s+(?:\(([[\w\s\-\/>,])*tag:\s([\w\.\-_\/]+)(?:,\s)*(.*)\))*\s+(.*)");
+			(string Tag, string Branch, DateTime Date) currentTag = ("", "", DateTime.MinValue);
 
 			foreach (var line in lines)
 			{
@@ -50,10 +52,11 @@ namespace ChangeLogFormatter
 
 				var date = DateTime.Parse(match.Groups[1].ToString());
 				var tag = match.Groups[3].ToString();
-				var message = match.Groups[4].ToString();
+				var branch= match.Groups[4].ToString();
+				var message = match.Groups[5].ToString();
 
 				if (tag != "")
-					currentTag = (tag, date);
+					currentTag = (tag, branch, date);
 
 				if (currentTag.Date == DateTime.MinValue)
 					continue;
@@ -67,22 +70,29 @@ namespace ChangeLogFormatter
 			if (currentTag.Date == DateTime.MinValue)
 				return false; // no tags found
 
+			#region Html
 			if (_outputType == OutputType.Html)
 			{
-				outStream.WriteLine("<html><body>");
+				outStream.WriteLine("<html>\n<body>");
 
 				foreach (var tag in _data.OrderByDescending(x => x.Key.Date))
 				{
-					outStream.WriteLine($"<table>\n<tr><td style=\"background-color:darkblue;color:white;\"><b>{tag.Key.Tag}</b></td></tr>");
-					outStream.WriteLine($"<tr><td><b>{tag.Key.Date.ToLongDateString()}</b></td></tr>");
+					outStream.WriteLine($"<b style=\"background-color:darkgreen;color:white\">&nbsp;{tag.Key.Tag}&nbsp;</b>");
+
+					if (tag.Key.Branch != "")
+						outStream.WriteLine($"<b style=\"background-color:darkred;color:white\">{tag.Key.Branch}</b>");
+
+					outStream.WriteLine($"<table>\n<tr><td><b>{tag.Key.Date.ToLongDateString()}</b></td></tr>");
 
 					foreach (var message in tag.Value)
 						outStream.WriteLine($"<tr><td>&nbsp;&nbsp;{message}</td></tr>");
 
 					outStream.WriteLine("</table>\n<br>");
 				}
-				outStream.WriteLine("</body></html>");
+				outStream.WriteLine("</body>\n</html>");
 			}
+			#endregion
+			#region Markdown
 			else if (_outputType == OutputType.Markdown)
 			{
 				foreach (var tag in _data.OrderByDescending(x => x.Key.Date))
@@ -91,22 +101,21 @@ namespace ChangeLogFormatter
 
 					foreach (var message in tag.Value)
 						outStream.WriteLine($"- {message}");
-
-					outStream.WriteLine();
 				}
 			}
+			#endregion
+			#region Text
 			else
 			{
 				foreach (var tag in _data.OrderByDescending(x => x.Key.Date))
 				{
-					outStream.WriteLine($"{tag.Key.Tag} {tag.Key.Date.ToLongDateString()}");
+					outStream.WriteLine($"{tag.Key.Tag} {tag.Key.Date.ToLongDateString()}"); // Don't show branch
 
 					foreach (var message in tag.Value)
 						outStream.WriteLine($"  {message}");
-
-					outStream.WriteLine();
 				}
 			}
+			#endregion
 
 			_data.Clear();
 

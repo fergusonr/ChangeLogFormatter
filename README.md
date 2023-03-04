@@ -4,49 +4,27 @@ Simple git log formatter in C# loosely based on https://github.com/CookPete/auto
 
 &nbsp;&nbsp;**ChangeLogFormatter [-html] [-md] [-text]** 
 
-&nbsp;&nbsp;**% git log --pretty=format:"%cd %d %s" --date=format:"%d/%m/%y" | ChangeLogFormatter > changelog.txt**
+&nbsp;&nbsp;**% git log --pretty=format:"%cd %d %s" --date=format:"%d/%m/%y" | ChangeLogFormatter -md > changelog.md**
 
 
 Converts this:-
-```24/02/23  (HEAD -> master, origin/master, origin/main, origin/HEAD) A few more topics post 2.40-rc0
-24/02/23  Merge branch 'ps/free-island-marks'
-24/02/23  Merge branch 'jk/http-proxy-tests'
-24/02/23  Merge branch 'ma/fetch-parallel-use-online-cpus'
-24/02/23  (tag: v2.40.0-rc0) Git 2.40-rc0
-24/02/23  Merge branch 'jc/genzeros-avoid-raw-write'
-24/02/23  Merge branch 'rd/doc-default-date-format'
-24/02/23  Merge branch 'js/gpg-errors'
-06/02/23  (tag: v2.39.2) Git 2.39.2
-06/02/23  Sync with 2.38.4
-06/02/23  (tag: v2.38.4) Git 2.38.4
-06/02/23  Sync with 2.37.6
-06/02/23  (tag: v2.37.6) Git 2.37.6
-06/02/23  Sync with 2.36.5
+```
+08/03/23  (HEAD -> master, tag: 1.0.2) Better formatted html
+03/03/23  (tag: 1.0.1, origin/master) Simplify regex
+01/03/23  Refactor tests
+01/03/23  (tag: 1.0.0) Improved 'tag' detection
+01/03/23  Initial project files
 ```
 
 To this:-
-<html>
-<table>
-<tr><td style="background-color:darkblue;color:white;"><b>v2.40.0-rc0 24 February 2023</b></td></tr>
-<tr><td>&nbsp;&nbsp;Git 2.40-rc0</td></tr>
-<tr><td>&nbsp;&nbsp;Merge branch 'jc/genzeros-avoid-raw-write'</td></tr>
-<tr><td>&nbsp;&nbsp;Merge branch 'rd/doc-default-date-format'</td></tr>
-<tr><td>&nbsp;&nbsp;Merge branch 'js/gpg-errors'</td></tr>
-</table></br>
-<table>
-<tr><td style="background-color:darkblue;color:white;"><b>v2.39.2 06 February 2023</b></td></tr>
-<tr><td>&nbsp;&nbsp;Git 2.39.2</td></tr>
-<tr><td>&nbsp;&nbsp;Sync with 2.38.4</td></tr>
-</table></br>
-<table>
-<tr><td style="background-color:darkblue;color:white;"><b>v2.38.4 06 February 2023</b></td></tr>
-<tr><td>&nbsp;&nbsp;Git 2.38.4</td></tr>
-<tr><td>&nbsp;&nbsp;Sync with 2.37.6</td></tr>
-</table></br>
-<table>
-<tr><td style="background-color:darkblue;color:white;"><b>v2.37.6 06 February 2023</b></td></tr>
-<tr><td>&nbsp;&nbsp;Git 2.37.6</td></tr>
-<tr><td>&nbsp;&nbsp;Sync with 2.36.5</td></tr>
-</table></br>
-<table>
-<html>
+#### 1.0.2
+> 08 March 2023
+- Better formatted html
+#### 1.0.1
+> 03 March 2023
+- Simplify regex
+- Refactor tests
+#### 1.0.0
+> 01 March 2023
+- Improved 'tag' detection
+- Initial project files
