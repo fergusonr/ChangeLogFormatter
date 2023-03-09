@@ -11,7 +11,7 @@ namespace ChangeLogFormatterTest
 		Parser _parser = new Parser(Parser.OutputType.Text);
 		StringWriter _output;
 
-		const string ExpectedResult = "1.0.1 24 February 2023\r\n  Message\r\n";
+		const string ExpectedResult = "1.0.1 24 February 2023\r\n  Message\r\n\r\n";
 
 		[SetUp]
 		public void Setup()
@@ -23,7 +23,7 @@ namespace ChangeLogFormatterTest
 		public void Message()
 		{
 			Assert.IsTrue(_parser.Parse(new[] { "24/02/23 (tag: 1.0.1) Message", "24/02/23  Message2" }, _output));
-			Assert.AreEqual(ExpectedResult + "  Message2\r\n", _output.ToString());
+			Assert.AreEqual(ExpectedResult.Substring(0, ExpectedResult.Length -2) + "  Message2\r\n\r\n", _output.ToString());
 		}
 
 		[Test]

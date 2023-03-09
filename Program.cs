@@ -6,7 +6,7 @@ using System.Linq;
 namespace ChangeLogFormatter
 {
 	//
-	// git log --pretty=format:"%cd %d %s" --date=format:"%d/%m/%y" | changeLogFormatter       > changelog.txt
+	// git log --pretty=format:"%cd %d %s" --date=format:"%d/%m/%y" | changeLogFormatter -text > changelog.txt
 	// git log --pretty=format:"%cd %d %s" --date=format:"%d/%m/%y" | changeLogFormatter -md   > changelog.md
 	// git log --pretty=format:"%cd %d %s" --date=format:"%d/%m/%y" | changeLogFormatter -html > changelog.html
 	//
@@ -15,12 +15,22 @@ namespace ChangeLogFormatter
 	{
 		static void Main(string[] args)
 		{
-			var type = Parser.OutputType.Text;
+			var type = Parser.OutputType.None;
 
 			if(args.Contains("-html"))
 				type = Parser.OutputType.Html;
 			if(args.Contains("-md"))
 				type = Parser.OutputType.Markdown;
+			if (args.Contains("-text"))
+				type = Parser.OutputType.Text;
+
+			if(type == Parser.OutputType.None)
+			{
+				Console.WriteLine("Usage: ChangeLogFormatter -text|-md|-html [infile] [outfile]");
+				Console.WriteLine();
+				Console.WriteLine(@"git log --pretty=format:""%cd %d %s"" --date=format:""%d/%m/%y"" | changeLogFormatter -md > changelog.md");
+				return;
+			}
 
 			var parser = new Parser(type);
 
@@ -31,7 +41,7 @@ namespace ChangeLogFormatter
 				using (TextWriter outStream = fileArgs.Count() == 2 ? new StreamWriter(fileArgs.Last()) : Console.Out)
 				{ 
 					if (!parser.Parse(File.ReadAllLines(fileArgs.First()), outStream))
-						Console.WriteLine("Error: No tags found");
+						Console.Error.WriteLine("Error: No tags found");
 				}
 			}
 			else
@@ -43,7 +53,7 @@ namespace ChangeLogFormatter
 					input.Add(line);
 
 				if(!parser.Parse(input.ToArray(), Console.Out))
-					Console.WriteLine("Error: No tags found");
+					Console.Error.WriteLine("Error: No tags found");
 			}
 		}
 	}
