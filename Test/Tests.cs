@@ -8,71 +8,38 @@ namespace ChangeLogFormatterTest
 {
 	public class ChangeLogFormatterTests
 	{
-		Parser _parser = new Parser(Parser.OutputType.Text);
-		StringWriter _output;
+		Parser _parser;
+		string _repoPath;
 
-		const string ExpectedResult = "1.0.1 24 February 2023\r\n  Message\r\n\r\n";
-
-		[SetUp]
+		[OneTimeSetUp]
 		public void Setup()
 		{
-			_output = new StringWriter();
+			Directory.SetCurrentDirectory(TestContext.CurrentContext.TestDirectory);
+			_repoPath = @"..\..\..";
 		}
 
 		[Test]
-		public void Message()
+		public void GenerateAllLogTypes()
 		{
-			Assert.IsTrue(_parser.Parse(new[] { "24/02/23 (tag: 1.0.1) Message", "24/02/23  Message2" }, _output));
-			Assert.AreEqual(ExpectedResult.Substring(0, ExpectedResult.Length -2) + "  Message2\r\n\r\n", _output.ToString());
-		}
+			var outFile = new StreamWriter("changelog.txt");
+			_parser = new Parser(Parser.OutputType.Text, outFile);
+			Assert.IsTrue(_parser.Parse(_repoPath));
+			outFile.Close();
 
-		[Test]
-		public void NoTag()
-		{
-			Assert.IsFalse(_parser.Parse(new[] { "24/02/23 Message" }, _output));
-			Assert.IsEmpty(_output.ToString());
-		}
+			outFile = new StreamWriter("changelog.md");
+			_parser = new Parser(Parser.OutputType.Markdown, outFile);
+			Assert.IsTrue(_parser.Parse(_repoPath));
+			outFile.Close();
 
-		[Test]
-		public void BadParse()
-		{
-			Assert.IsFalse(_parser.Parse(new[] { "Foobar" }, _output));
-			Assert.IsEmpty(_output.ToString());
-		}
+			outFile = new StreamWriter("changelog.rtf");
+			_parser = new Parser(Parser.OutputType.Rtf, outFile);
+			Assert.IsTrue(_parser.Parse(_repoPath));
+			outFile.Close();
 
-		[Test]
-		public void Tag()
-		{
-			Assert.IsTrue(_parser.Parse(new[] { "24/02/23 (tag: 1.0.1) Message" }, _output));
-			Assert.AreEqual(ExpectedResult, _output.ToString());
-		}
-
-		[Test]
-		public void Tags_HeadMaster()
-		{
-			Assert.IsTrue(_parser.Parse(new[] { "24/02/23 (HEAD -> master, tag: 1.0.1) Message" }, _output));
-			Assert.AreEqual(ExpectedResult, _output.ToString());
-		}
-
-		[Test]
-		public void Tag_OriginMaster()
-		{
-			Assert.IsTrue(_parser.Parse(new[] { "24/02/23 (tag: 1.0.1, origin/master) Message" }, _output));
-			Assert.AreEqual(ExpectedResult, _output.ToString());
-		}
-
-		[Test]
-		public void Tag_headMaster_OriginMaster()
-		{
-			Assert.IsTrue(_parser.Parse(new[] { "24/02/23 (HEAD -> master, tag: 1.0.1, origin/master) Message" }, _output));
-			Assert.AreEqual(ExpectedResult, _output.ToString());
-		}
-
-		[Test]
-		public void Tag_headMaster_OriginMaster_OriginHead()
-		{
-			Assert.IsTrue(_parser.Parse(new[] { "24/02/23 (HEAD -> master, tag: 1.0.1, origin/master, origin/HEAD) Message" }, _output));
-			Assert.AreEqual(ExpectedResult, _output.ToString());
+			outFile = new StreamWriter("changelog.htm");
+			_parser = new Parser(Parser.OutputType.Html, outFile);
+			Assert.IsTrue(_parser.Parse(_repoPath));
+			outFile.Close();
 		}
 	}
 }

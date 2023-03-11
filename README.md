@@ -2,13 +2,16 @@
 
 Simple git log formatter in C# loosely based on https://github.com/CookPete/auto-changelog
 
-&nbsp;&nbsp;**ChangeLogFormatter -text|-md|-html [outfile]** 
+&nbsp;&nbsp;**ChangeLogFormatter -text | -md | -rtf | -html [-repo path] [outfile]** 
 
 
 
-From standard git format:-
+From standard git output:-
 ```
-11/03/23  (HEAD -> master, tag: 1.1.0) Switch to LibGit2Sharp
+% git log --pretty=format:"%cd %d %s" --date=format:"%d/%m/%y"
+
+13/03/23  (HEAD -> master, tag: 1.1.1) Support Rtf output. -repo path argument
+11/03/23  (tag: 1.1.0) Switch to LibGit2Sharp
 11/03/23  (tag: 1.0.2) Add usage message. Refactor
 09/03/23  (origin/master) Better formatted md / html
 03/03/23  (tag: 1.0.1) Simplify regex
@@ -18,18 +21,21 @@ From standard git format:-
 ```
 
 To this:-
-#### 1.1.0
+#### <span style="background-color:rgb(0,100,0);color:rgb(255,255,255)">1.1.1</span>
+> 13 March 2023
+- Support Rtf output. -repo path argument
+#### <span style="background-color:rgb(0,100,0);color:rgb(255,255,255)">1.1.0</span>
 > 11 March 2023
 - Switch to LibGit2Sharp
-#### 1.0.2
+#### <span style="background-color:rgb(0,100,0);color:rgb(255,255,255)">1.0.2</span>
 > 11 March 2023
 - Add usage message. Refactor
 - (origin/master) Better formatted md / html
-#### 1.0.1
+#### <span style="background-color:rgb(0,100,0);color:rgb(255,255,255)">1.0.1</span>
 > 03 March 2023
 - Simplify regex
 - Refactor tests
-#### 1.0.0
+#### <span style="background-color:rgb(0,100,0);color:rgb(255,255,255)">1.0.0</span>
 > 01 March 2023
 - Improved 'tag' detection
 - Initial project files
