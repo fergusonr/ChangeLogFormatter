@@ -2,14 +2,14 @@
 
 Simple git log formatter in C# loosely based on https://github.com/CookPete/auto-changelog
 
-&nbsp;&nbsp;**ChangeLogFormatter -text|-md|-html [infile] [outfile]** 
-
-&nbsp;&nbsp;**% git log --pretty=format:"%cd %d %s" --date=format:"%d/%m/%y" | ChangeLogFormatter -md > changelog.md**
+&nbsp;&nbsp;**ChangeLogFormatter -text|-md|-html [outfile]** 
 
 
-Converts this:-
+
+From standard git format:-
 ```
-11/03/23  (HEAD -> master, tag: 1.0.2) Add usage message. Refactor
+11/03/23  (HEAD -> master, tag: 1.1.0) Switch to LibGit2Sharp
+11/03/23  (tag: 1.0.2) Add usage message. Refactor
 09/03/23  (origin/master) Better formatted md / html
 03/03/23  (tag: 1.0.1) Simplify regex
 01/03/23  Refactor tests
@@ -18,6 +18,9 @@ Converts this:-
 ```
 
 To this:-
+#### 1.1.0
+> 11 March 2023
+- Switch to LibGit2Sharp
 #### 1.0.2
 > 11 March 2023
 - Add usage message. Refactor

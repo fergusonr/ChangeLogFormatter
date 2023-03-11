@@ -1,16 +1,9 @@
 ﻿using System;
 using System.IO;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace ChangeLogFormatter
 {
-	//
-	// git log --pretty=format:"%cd %d %s" --date=format:"%d/%m/%y" | changeLogFormatter -text > changelog.txt
-	// git log --pretty=format:"%cd %d %s" --date=format:"%d/%m/%y" | changeLogFormatter -md   > changelog.md
-	// git log --pretty=format:"%cd %d %s" --date=format:"%d/%m/%y" | changeLogFormatter -html > changelog.html
-	//
-
 	public static class Program
 	{
 		static void Main(string[] args)
@@ -26,33 +19,17 @@ namespace ChangeLogFormatter
 
 			if(type == Parser.OutputType.None)
 			{
-				Console.WriteLine("Usage: ChangeLogFormatter -text|-md|-html [infile] [outfile]");
-				Console.WriteLine();
-				Console.WriteLine(@"git log --pretty=format:""%cd %d %s"" --date=format:""%d/%m/%y"" | changeLogFormatter -md > changelog.md");
+				Console.WriteLine("Usage: ChangeLogFormatter -text|-md|-html [outfile]");
 				return;
 			}
 
-			var parser = new Parser(type);
+			var outFile = args.Where(x => !x.StartsWith("-"));
 
-			var fileArgs = args.Where(x => !x.StartsWith("-"));
-
-			if(fileArgs.Any() && File.Exists(fileArgs.First()))
+			using (TextWriter outStream = outFile.Any() ? new StreamWriter(outFile.Last()) : Console.Out)
 			{
-				using (TextWriter outStream = fileArgs.Count() == 2 ? new StreamWriter(fileArgs.Last()) : Console.Out)
-				{ 
-					if (!parser.Parse(File.ReadAllLines(fileArgs.First()), outStream))
-						Console.Error.WriteLine("Error: No tags found");
-				}
-			}
-			else
-			{
-				var input = new List<string>();
+				var parser = new Parser(type, outStream);
 
-				string line;
-				while ((line = Console.ReadLine()) != null)
-					input.Add(line);
-
-				if(!parser.Parse(input.ToArray(), Console.Out))
+				if (!parser.Parse())
 					Console.Error.WriteLine("Error: No tags found");
 			}
 		}

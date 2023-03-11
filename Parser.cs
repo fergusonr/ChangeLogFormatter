@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
+
+using LibGit2Sharp;
 
 namespace ChangeLogFormatter
 {
@@ -13,61 +14,51 @@ namespace ChangeLogFormatter
 		private struct Tag
 		{
 			internal string Name;
-			internal string Branch;
 			internal DateTime Date;
 		}
 
 		private readonly Dictionary<Tag, List<string>> _data = new Dictionary<Tag, List<string>>();
 		private OutputType _outputType;
+		private TextWriter _outStream;
 
 		/// <summary>
 		/// Git log parser
 		/// </summary>
 		/// <param name="type"></param>
-		public Parser(OutputType type)
+		public Parser(OutputType type, TextWriter outStream)
 		{
 			_outputType = type;
+			_outStream = outStream;
 		}
 
 		/// <summary>
-		/// Format incomming git log output
+		/// Format git log
 		/// </summary>
-		/// <param name="lines"></param>
-		/// <param name="outStream"></param>
-		public bool Parse(string[] lines, TextWriter outStream)
+		public bool Parse()
 		{
-			/* Example log.........
-			 
-			  24/02/23	(HEAD -> master, tag: 1.0.0, origin/master, origin/HEAD) Merge ..\.\Windows\App\DepartureBoard
-			  24/02/23	(HEAD -> master, tag: 1.0.0, origin/master) Support markdown
-			  24/02/23  (HEAD -> master, tag: 1.0.0) Support marketdown
-			  24/02/23  (HEAD -> master) /t:gitlog working
-			  24/02/23  (origin/master) App token flavouring, git log from project msbuild task
-			  21/02/23  (tag: 1.3.24) Function key shortcut combo fixed. NuGet package update
-			  16/02/23  Fix and refactor menu helpers
-			  18/10/22  (tag: v17.4.0-preview-22518-02) Final release branding for 17.4 (#8015)
-			 */
+			Repository repo;
 
-			// Indispensable! --> https://regex101.com
-			// https://docs.github.com/en/get-started/using-git/dealing-with-special-characters-in-branch-and-tag-names
-			//
-			var re = new Regex(@"^(\d+\/\d+\/\d+)\s+(?:\(([\w\s\-\/>,])*tag:\s([\w\.\-_\/]+)(?:,\s)*(.*)\))*\s+(.*)");
+			try
+			{
+				repo = new Repository(".");
+			}
+			catch(Exception e)
+			{
+				Console.Error.WriteLine(e.Message);
+				return false;
+			}
+
 			var currentTag = new Tag();
 
-			foreach (var line in lines)
+			foreach (var commit in repo.Commits.OrderByDescending(x => x.Committer.When))
 			{
-				var match = re.Match(line);
+				var tag = repo.Tags.FirstOrDefault(x => commit.Sha == x.Reference.TargetIdentifier);
 
-				if (match.Captures.Count == 0)
-					continue;
-
-				var date = DateTime.Parse(match.Groups[1].ToString());
-				var tag = match.Groups[3].ToString();
-				var branch= match.Groups[4].ToString();
-				var message = match.Groups[5].ToString();
-
-				if (tag != "")
-					currentTag = new Tag() { Name = tag, Branch = branch, Date = date };
+				if (tag != null)
+				{
+					currentTag.Name = tag.FriendlyName;
+					currentTag.Date = commit.Committer.When.Date;
+				}
 
 				if (currentTag.Date == DateTime.MinValue)
 					continue;
@@ -75,32 +66,31 @@ namespace ChangeLogFormatter
 				if (!_data.ContainsKey(currentTag))
 					_data[currentTag] = new List<string>();
 
-				_data[currentTag].Add(message);
+				_data[currentTag].Add(commit.MessageShort);
 			}
 
-			if (currentTag.Date == DateTime.MinValue)
+			repo.Dispose();
+
+			if (_data.Count == 0)
 				return false; // no tags found
 
 			#region Html
 			if (_outputType == OutputType.Html)
 			{
-				outStream.WriteLine("<html>\n<body>");
+				_outStream.WriteLine("<html>\n<body>");
 
 				foreach (var tag in _data.OrderByDescending(x => x.Key.Date))
 				{
-					outStream.WriteLine($"<b style=\"background-color:darkgreen;color:white\">&nbsp;{tag.Key.Name}&nbsp;</b>");
+					_outStream.WriteLine($"<b style=\"background-color:darkgreen;color:white\">&nbsp;{tag.Key.Name}&nbsp;</b>");
 
-					if (tag.Key.Branch != "")
-						outStream.WriteLine($"<b style=\"background-color:darkred;color:white\">{tag.Key.Branch}</b>");
-
-					outStream.WriteLine($"<table>\n<tr><td><b>{tag.Key.Date.ToLongDateString()}</b></td></tr>");
+					_outStream.WriteLine($"<table>\n<tr><td><b>{tag.Key.Date.ToLongDateString()}</b></td></tr>");
 
 					foreach (var message in tag.Value)
-						outStream.WriteLine($"<tr><td>&nbsp;&nbsp;{message}</td></tr>");
+						_outStream.WriteLine($"<tr><td>&nbsp;&nbsp;{message}</td></tr>");
 
-					outStream.WriteLine("</table>\n<br>");
+					_outStream.WriteLine("</table>\n<br>");
 				}
-				outStream.WriteLine("</body>\n</html>");
+				_outStream.WriteLine("</body>\n</html>");
 			}
 			#endregion
 			#region Markdown
@@ -108,10 +98,10 @@ namespace ChangeLogFormatter
 			{
 				foreach (var tag in _data.OrderByDescending(x => x.Key.Date))
 				{
-					outStream.WriteLine($"#### {tag.Key.Name}\n> {tag.Key.Date.ToLongDateString()}");
+					_outStream.WriteLine($"#### {tag.Key.Name}\n> {tag.Key.Date.ToLongDateString()}");
 
 					foreach (var message in tag.Value)
-						outStream.WriteLine($"- {message}");
+						_outStream.WriteLine($"- {message}");
 				}
 			}
 			#endregion
@@ -120,12 +110,12 @@ namespace ChangeLogFormatter
 			{
 				foreach (var tag in _data.OrderByDescending(x => x.Key.Date))
 				{
-					outStream.WriteLine($"{tag.Key.Name} {tag.Key.Date.ToLongDateString()}"); // Don't show branch
+					_outStream.WriteLine($"{tag.Key.Name} {tag.Key.Date.ToLongDateString()}"); // Don't show branch
 
 					foreach (var message in tag.Value)
-						outStream.WriteLine($"  {message}");
+						_outStream.WriteLine($"  {message}");
 
-					outStream.WriteLine();
+					_outStream.WriteLine();
 				}
 			}
 			#endregion
