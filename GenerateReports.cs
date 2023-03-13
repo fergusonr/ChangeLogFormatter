@@ -8,7 +8,7 @@ using LibGit2Sharp;
 
 namespace ChangeLogFormatter
 {
-	public class Parser
+	public class GenerateReports
 	{
 		public enum OutputType { None, Text, Rtf, Html, Markdown };
 
@@ -26,7 +26,7 @@ namespace ChangeLogFormatter
 		/// Git log parser
 		/// </summary>
 		/// <param name="type"></param>
-		public Parser(OutputType type, TextWriter outStream)
+		public GenerateReports(OutputType type, TextWriter outStream)
 		{
 			_outputType = type;
 			_outStream = outStream;
@@ -35,7 +35,7 @@ namespace ChangeLogFormatter
 		/// <summary>
 		/// Format git log
 		/// </summary>
-		public bool Parse(string repoPath)
+		public bool Generate(string repoPath)
 		{
 			Repository repo;
 
@@ -98,7 +98,7 @@ namespace ChangeLogFormatter
 					}
 
 					if (Properties.Settings.Default.Advertise)
-						_outStream.WriteLine($@"<a href=""{gitUrl}"">{text}</a>");
+						_outStream.WriteLine($@"{text}: <a href=""{gitUrl}"">{gitUrl}</a>");
 
 					_outStream.WriteLine("</body>\n</html>");
 				}
@@ -119,7 +119,7 @@ namespace ChangeLogFormatter
 					_outStream.WriteLine();
 
 					if (Properties.Settings.Default.Advertise)
-						_outStream.WriteLine($"[{text}]({gitUrl})");
+						_outStream.WriteLine($"{text}: [{gitUrl}]({gitUrl})");
 				}
 
 				///
@@ -127,23 +127,23 @@ namespace ChangeLogFormatter
 				///
 				else if (_outputType == OutputType.Rtf)
 				{
-					_outStream.WriteLine(@"{\rtf1\ansi{\fonttbl\f0\fswiss Helvetica;}");
+					_outStream.WriteLine(@"{\rtf1\ansi{\fonttbl\f0\fCourier New;}");
 					_outStream.WriteLine($@"{{\colortbl;\red{fCol.R}\green{fCol.G}\blue{fCol.B};\red{bCol.R}\green{bCol.G}\blue{bCol.B};}}");
 
 					foreach (var tag in _data.OrderByDescending(x => x.Key.Date))
 					{
-						_outStream.WriteLine($@"{{\highlight1\cf1\highlight2\b1 {tag.Key.Name}}}\par\b1 {tag.Key.Date.ToLongDateString()}\b0\par");
+						_outStream.WriteLine($@"{{\pard\li0\highlight1\cf1\highlight2\b1  {tag.Key.Name} }}\line\b1 {tag.Key.Date.ToLongDateString()}\b0\par");
+
+						_outStream.WriteLine(@"{\pard\li400");
 
 						foreach (var message in tag.Value)
-							_outStream.WriteLine($@"\pard\tab\li\bullet {message}\par");
+							_outStream.WriteLine($@"\bullet  {message}\line");
 
-						_outStream.WriteLine(@"\par");
+						_outStream.WriteLine(@"\par}");
 					}
 
 					if(Properties.Settings.Default.Advertise)
-						_outStream.WriteLine($@"\fs20{text}: {{\field{{\*\fldinst HYPERLINK ""{gitUrl}""}}}}");
-
-					_outStream.WriteLine(@"\par");
+						_outStream.WriteLine($@"\fs20{text}: {{\field{{\*\fldinst HYPERLINK ""{gitUrl}""}}}}\line");
 
 					_outStream.WriteLine("}");
 				}
@@ -159,13 +159,13 @@ namespace ChangeLogFormatter
 
 						foreach (var message in tag.Value)
 							_outStream.WriteLine($"  {message}");
-
-						if (Properties.Settings.Default.Advertise)
-						{
-							_outStream.WriteLine();
-							_outStream.WriteLine($"{text}: {gitUrl}");
-						}
 						_outStream.WriteLine();
+					}
+					
+					if (Properties.Settings.Default.Advertise)
+					{
+						_outStream.WriteLine();
+						_outStream.WriteLine($"{text}: {gitUrl}");
 					}
 				}
 

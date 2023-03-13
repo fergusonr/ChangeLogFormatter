@@ -8,20 +8,20 @@ namespace ChangeLogFormatter
 	{
 		static void Main(string[] args)
 		{
-			var type = Parser.OutputType.None;
+			var type = GenerateReports.OutputType.None;
 
 			if (args.ArgBool("html"))
-				type = Parser.OutputType.Html;
+				type = GenerateReports.OutputType.Html;
 			if (args.ArgBool("rtf"))
-				type = Parser.OutputType.Rtf;
+				type = GenerateReports.OutputType.Rtf;
 			if (args.ArgBool("md"))
-				type = Parser.OutputType.Markdown;
+				type = GenerateReports.OutputType.Markdown;
 			if (args.ArgBool("text"))
-				type = Parser.OutputType.Text;
+				type = GenerateReports.OutputType.Text;
 
 			var repoPath = args.Arg("repo") ?? ".";
 
-			if (type == Parser.OutputType.None)
+			if (type == GenerateReports.OutputType.None)
 			{
 				Console.WriteLine("Usage: ChangeLogFormatter -text | -rtf | -md | -html [-repo path] [outfile]");
 				return;
@@ -31,9 +31,9 @@ namespace ChangeLogFormatter
 
 			using (TextWriter outStream = outFile.Any() ? new StreamWriter(outFile.Last()) : Console.Out)
 			{
-				var parser = new Parser(type, outStream);
+				var parser = new GenerateReports(type, outStream);
 
-				if (!parser.Parse(repoPath))
+				if (!parser.Generate(repoPath))
 					Console.Error.WriteLine("Error: No tags found");
 			}
 		}
