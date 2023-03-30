@@ -1,6 +1,4 @@
 ﻿using System;
-using System.IO;
-using System.Linq;
 
 namespace ChangeLogFormatter
 {
@@ -23,7 +21,7 @@ namespace ChangeLogFormatter
 
 			if (type == GenerateReports.OutputType.None)
 			{
-				Console.WriteLine("Usage: ChangeLogFormatter -text | -rtf | -md | -html [-repo path] [outfile]");
+				Console.WriteLine("Usage: ChangeLogFormatter -text | -rtf | -md | -html [-nocredit] [-repo path] [outfile]");
 				return;
 			}
 
@@ -31,7 +29,7 @@ namespace ChangeLogFormatter
 
 			using (TextWriter outStream = outFile.Any() ? new StreamWriter(outFile.Last()) : Console.Out)
 			{
-				var parser = new GenerateReports(type, outStream);
+				var parser = new GenerateReports(type, outStream, args.ArgBool("nocredit"));
 
 				if (!parser.Generate(repoPath))
 					Console.Error.WriteLine("Error: No tags found");

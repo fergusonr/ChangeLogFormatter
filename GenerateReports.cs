@@ -1,8 +1,5 @@
 ﻿using System;
-using System.IO;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 
 using LibGit2Sharp;
 
@@ -21,15 +18,17 @@ namespace ChangeLogFormatter
 		private readonly Dictionary<Tag, List<string>> _data = new Dictionary<Tag, List<string>>();
 		private readonly OutputType _outputType;
 		private readonly TextWriter _outStream;
+		private readonly bool _noCredit;
 
 		/// <summary>
 		/// Git log parser
 		/// </summary>
 		/// <param name="type"></param>
-		public GenerateReports(OutputType type, TextWriter outStream)
+		public GenerateReports(OutputType type, TextWriter outStream, bool noCredit)
 		{
 			_outputType = type;
 			_outStream = outStream;
+			_noCredit = noCredit;
 		}
 
 		/// <summary>
@@ -97,7 +96,7 @@ namespace ChangeLogFormatter
 						_outStream.WriteLine("</table>\n<br>");
 					}
 
-					if (Properties.Settings.Default.Advertise)
+					if (!_noCredit)
 						_outStream.WriteLine($@"{text}: <a href=""{gitUrl}"">{gitUrl}</a>");
 
 					_outStream.WriteLine("</body>\n</html>");
@@ -118,7 +117,7 @@ namespace ChangeLogFormatter
 
 					_outStream.WriteLine();
 
-					if (Properties.Settings.Default.Advertise)
+					if (!_noCredit)
 						_outStream.WriteLine($"{text}: [{gitUrl}]({gitUrl})");
 				}
 
@@ -142,7 +141,7 @@ namespace ChangeLogFormatter
 						_outStream.WriteLine(@"\par}");
 					}
 
-					if(Properties.Settings.Default.Advertise)
+					if(!_noCredit)
 						_outStream.WriteLine($@"\fs20{text}: {{\field{{\*\fldinst HYPERLINK ""{gitUrl}""}}}}\line");
 
 					_outStream.WriteLine("}");
@@ -161,8 +160,8 @@ namespace ChangeLogFormatter
 							_outStream.WriteLine($"  {message}");
 						_outStream.WriteLine();
 					}
-					
-					if (Properties.Settings.Default.Advertise)
+
+					if (!_noCredit)
 					{
 						_outStream.WriteLine();
 						_outStream.WriteLine($"{text}: {gitUrl}");
