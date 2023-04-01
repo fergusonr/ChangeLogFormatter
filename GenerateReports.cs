@@ -66,7 +66,7 @@ namespace ChangeLogFormatter
 				repo.Dispose();
 
 				if (_data.Count == 0)
-					return false; // no tags found
+					throw new Exception("No tags found");
 
 				///
 				/// Generate log report
@@ -170,10 +170,9 @@ namespace ChangeLogFormatter
 
 				_data.Clear();
 			}
-			catch (Exception e)
+			catch (Exception)
 			{
-				Console.Error.WriteLine(e.Message);
-				return false;
+				throw;
 			}
 
 			return true;

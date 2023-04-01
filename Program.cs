@@ -31,8 +31,14 @@ namespace ChangeLogFormatter
 			{
 				var parser = new GenerateReports(type, outStream, args.ArgBool("nocredit"));
 
-				if (!parser.Generate(repoPath))
-					Console.Error.WriteLine("Error: No tags found");
+				try
+				{
+					parser.Generate(repoPath);
+				}
+				catch(Exception e)
+				{
+					Console.Error.WriteLine($"Error: {e.Message}");
+				}
 			}
 		}
 	}
