@@ -17,19 +17,22 @@ namespace ChangeLogFormatter
 			if (args.ArgBool("text"))
 				type = GenerateReports.OutputType.Text;
 
-			var repoPath = args.Arg("repo") ?? ".";
-
 			if (type == GenerateReports.OutputType.None)
 			{
-				Console.WriteLine("Usage: ChangeLogFormatter -text | -rtf | -md | -html [-nocredit] [-repo path] [outfile]");
+				Console.WriteLine("Usage: ChangeLogFormatter -text | -rtf | -md | -html [-nocredit] [-untagged] [-repo path] [outfile]");
 				return;
 			}
 
+			var repoPath = args.Arg("repo") ?? ".";
 			var outFile = args.Where(x => !x.StartsWith("-") && x != repoPath);
 
 			using (TextWriter outStream = outFile.Any() ? new StreamWriter(outFile.Last()) : Console.Out)
 			{
-				var parser = new GenerateReports(type, outStream, args.ArgBool("nocredit"));
+				var parser = new GenerateReports(type, outStream) 
+				{
+					NoCredit = args.ArgBool("nocredit"),
+					Untagged = args.ArgBool("untagged")
+				};
 
 				try
 				{

@@ -9,6 +9,9 @@ namespace ChangeLogFormatter
 	{
 		public enum OutputType { None, Text, Rtf, Html, Markdown };
 
+		public bool NoCredit { get; set; }
+		public bool Untagged { get; set; }
+
 		private struct Tag
 		{
 			internal string Name;
@@ -18,17 +21,16 @@ namespace ChangeLogFormatter
 		private readonly Dictionary<Tag, List<string>> _data = new Dictionary<Tag, List<string>>();
 		private readonly OutputType _outputType;
 		private readonly TextWriter _outStream;
-		private readonly bool _noCredit;
+		private const string _untagged = "Untagged";
 
 		/// <summary>
 		/// Git log parser
 		/// </summary>
 		/// <param name="type"></param>
-		public GenerateReports(OutputType type, TextWriter outStream, bool noCredit)
+		public GenerateReports(OutputType type, TextWriter outStream)
 		{
 			_outputType = type;
 			_outStream = outStream;
-			_noCredit = noCredit;
 		}
 
 		/// <summary>
@@ -54,8 +56,16 @@ namespace ChangeLogFormatter
 						currentTag.Date = commit.Author.When.Date;
 					}
 
-					if (currentTag.Date == DateTime.MinValue) // skip untagged commits
-						continue;
+					if (currentTag.Date == DateTime.MinValue)
+					{
+						if (Untagged)
+						{
+							currentTag.Name = _untagged;
+							currentTag.Date = commit.Author.When.Date;
+						}
+						else
+							continue;// skip untagged commits
+					}
 
 					if (!_data.ContainsKey(currentTag))
 						_data[currentTag] = new List<string>();
@@ -76,6 +86,7 @@ namespace ChangeLogFormatter
 
 				// tag version banner
 				var bCol = Color.DarkGreen;
+				var bColU = Color.Orange;
 				var fCol = Color.White;
 
 				///
@@ -87,7 +98,9 @@ namespace ChangeLogFormatter
 
 					foreach (var tag in _data.OrderByDescending(x => x.Key.Date))
 					{
-						_outStream.WriteLine($"<b style=\"background-color:rgb({bCol.R},{bCol.G},{bCol.B});color:rgb({fCol.R},{fCol.G},{fCol.B})\">&nbsp;{tag.Key.Name}&nbsp;</b>");
+						var col = tag.Key.Name == _untagged ? bColU : bCol;
+
+						_outStream.WriteLine($"<b style=\"background-color:rgb({col.R},{col.G},{col.B});color:rgb({fCol.R},{fCol.G},{fCol.B})\">&nbsp;{tag.Key.Name}&nbsp;</b>");
 						_outStream.WriteLine($"<table>\n<tr><td><b>{tag.Key.Date.ToLongDateString()}</b></td></tr>");
 
 						foreach (var message in tag.Value)
@@ -96,7 +109,7 @@ namespace ChangeLogFormatter
 						_outStream.WriteLine("</table>\n<br>");
 					}
 
-					if (!_noCredit)
+					if (!NoCredit)
 						_outStream.WriteLine($@"{text}: <a href=""{gitUrl}"">{gitUrl}</a>");
 
 					_outStream.WriteLine("</body>\n</html>");
@@ -109,7 +122,9 @@ namespace ChangeLogFormatter
 				{
 					foreach (var tag in _data.OrderByDescending(x => x.Key.Date))
 					{
-						_outStream.WriteLine($"#### <span style=\"background-color:rgb({bCol.R},{bCol.G},{bCol.B});color:rgb({fCol.R},{fCol.G},{fCol.B})\">{tag.Key.Name}</span>\n{tag.Key.Date.ToLongDateString()}");
+						var col = tag.Key.Name == _untagged ? bColU : bCol;
+
+						_outStream.WriteLine($"#### <span style=\"background-color:rgb({col.R},{col.G},{col.B});color:rgb({fCol.R},{fCol.G},{fCol.B})\">{tag.Key.Name}</span>\n**{tag.Key.Date.ToLongDateString()}**");
 
 						foreach (var message in tag.Value)
 							_outStream.WriteLine($"- {message}");
@@ -117,7 +132,7 @@ namespace ChangeLogFormatter
 
 					_outStream.WriteLine();
 
-					if (!_noCredit)
+					if (!NoCredit)
 						_outStream.WriteLine($"{text}: [{gitUrl}]({gitUrl})");
 				}
 
@@ -127,11 +142,13 @@ namespace ChangeLogFormatter
 				else if (_outputType == OutputType.Rtf)
 				{
 					_outStream.WriteLine(@"{\rtf1\ansi{\fonttbl\f0\fCourier New;}");
-					_outStream.WriteLine($@"{{\colortbl;\red{fCol.R}\green{fCol.G}\blue{fCol.B};\red{bCol.R}\green{bCol.G}\blue{bCol.B};}}");
+					_outStream.WriteLine($@"{{\colortbl;\red{fCol.R}\green{fCol.G}\blue{fCol.B};\red{bCol.R}\green{bCol.G}\blue{bCol.B};\red{bColU.R}\green{bColU.G}\blue{bColU.B};}}");
 
 					foreach (var tag in _data.OrderByDescending(x => x.Key.Date))
 					{
-						_outStream.WriteLine($@"{{\pard\li0\highlight1\cf1\highlight2\b1  {tag.Key.Name} }}\line\b1 {tag.Key.Date.ToLongDateString()}\b0\par");
+						var col = tag.Key.Name == _untagged ? 3 : 2;
+
+						_outStream.WriteLine($@"{{\pard\li0\highlight1\cf1\highlight{col}\b1  {tag.Key.Name} }}\line\b1 {tag.Key.Date.ToLongDateString()}\b0\par");
 
 						_outStream.WriteLine(@"{\pard\li400");
 
@@ -141,7 +158,7 @@ namespace ChangeLogFormatter
 						_outStream.WriteLine(@"\par}");
 					}
 
-					if(!_noCredit)
+					if(!NoCredit)
 						_outStream.WriteLine($@"\fs20{text}: {{\field{{\*\fldinst HYPERLINK ""{gitUrl}""}}}}\line");
 
 					_outStream.WriteLine("}");
@@ -161,7 +178,7 @@ namespace ChangeLogFormatter
 						_outStream.WriteLine();
 					}
 
-					if (!_noCredit)
+					if (!NoCredit)
 					{
 						_outStream.WriteLine();
 						_outStream.WriteLine($"{text}: {gitUrl}");
