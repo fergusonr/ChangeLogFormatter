@@ -1,6 +1,12 @@
 ﻿using System;
 using System.Drawing;
 
+#if !NET5_0_OR_GREATER
+using System.IO;
+using System.Linq;
+using System.Collections.Generic;
+#endif
+
 using LibGit2Sharp;
 
 namespace ChangeLogFormatter
@@ -21,6 +27,7 @@ namespace ChangeLogFormatter
 		private readonly Dictionary<Tag, List<string>> _data = new Dictionary<Tag, List<string>>();
 		private readonly OutputType _outputType;
 		private readonly TextWriter _outStream;
+		private readonly bool _stdout;
 		private const string _untagged = "Untagged";
 
 		/// <summary>
@@ -31,6 +38,7 @@ namespace ChangeLogFormatter
 		{
 			_outputType = type;
 			_outStream = outStream;
+			_stdout = outStream == Console.Out;
 		}
 
 		/// <summary>
@@ -171,7 +179,30 @@ namespace ChangeLogFormatter
 				{
 					foreach (var tag in _data.OrderByDescending(x => x.Key.Date))
 					{
-						_outStream.WriteLine($"{tag.Key.Name} {tag.Key.Date.ToLongDateString()}");
+						if (_stdout)
+						{
+							Console.BackgroundColor = tag.Key.Name == _untagged ? ConsoleColor.DarkYellow : ConsoleColor.DarkGreen;
+							Console.ForegroundColor = ConsoleColor.White;
+						}
+
+						_outStream.Write($" {tag.Key.Name} ");
+
+						// https://stackoverflow.com/questions/31140768/console-resetcolor-is-not-resetting-the-line-after-completely
+						if (_stdout)
+							Console.ResetColor();
+						_outStream.WriteLine();
+
+						if (_stdout)
+						{
+							Console.BackgroundColor = ConsoleColor.DarkGray;
+							Console.ForegroundColor = ConsoleColor.White;
+						}
+
+						_outStream.Write($" {tag.Key.Date.ToLongDateString()} ");
+
+						if (_stdout)
+							Console.ResetColor();
+						_outStream.WriteLine();
 
 						foreach (var message in tag.Value)
 							_outStream.WriteLine($"  {message}");

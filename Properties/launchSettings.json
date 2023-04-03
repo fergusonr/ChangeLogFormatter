@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ChangeLogFormatter": {
+      "commandName": "Project",
+      "commandLineArgs": "-text -untagged -repo ..\\..\\.."
+    }
+  }
+}
