@@ -2,7 +2,7 @@
   "profiles": {
     "ChangeLogFormatter": {
       "commandName": "Project",
-      "commandLineArgs": "-text -untagged -repo ..\\..\\.."
+      "commandLineArgs": "-text -arse -repo foo"
     }
   }
 }
