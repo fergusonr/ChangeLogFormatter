@@ -74,7 +74,7 @@ namespace ChangeLogFormatter
 				if (!_data.ContainsKey(currentTag))
 					_data[currentTag] = new List<string>();
 
-				_data[currentTag].Add(commit.MessageShort);
+				_data[currentTag].Add(commit.Message);
 			}
 
 			repo.Dispose();
@@ -157,7 +157,10 @@ namespace ChangeLogFormatter
 					_outStream.WriteLine(@"{\pard\li400");
 
 					foreach (var message in tag.Value)
-						_outStream.WriteLine($@"\bullet  {message}\line");
+					{
+						var messageMod = message.Count(x => x == '\n') > 1 ? message.Replace("\n", "\\line\n") : message;
+						_outStream.WriteLine($@"\bullet  {messageMod}\line");
+					}
 
 					_outStream.WriteLine(@"\par}");
 				}

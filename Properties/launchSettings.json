@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "ChangeLogFormatter": {
-      "commandName": "Project",
-      "commandLineArgs": "-text -arse -repo foo"
-    }
-  }
-}

@@ -24,7 +24,7 @@ namespace ChangeLogFormatter
 			var noCredit = args.ArgBool("nocredit");
 			var untagged = args.ArgBool("untagged");
 
-			var unknown = args.Check();
+			var unknown = args.Unknown();
 
 			if(args.Length == 0 || unknown.Any())
 			{
@@ -75,7 +75,7 @@ namespace ChangeLogFormatter
 			return args.Contains($"-{name}");
 		}
 
-		internal static IEnumerable<string> Check(this string[] args)
+		internal static IEnumerable<string> Unknown(this string[] args)
 		{
 			return args.Where(x => x.StartsWith("-")).Except(_known);
 		}
