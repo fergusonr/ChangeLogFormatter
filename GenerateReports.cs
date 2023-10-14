@@ -13,7 +13,7 @@ namespace ChangeLogFormatter
 {
 	public class GenerateReports
 	{
-		public enum OutputType { None, Text, Rtf, Html, Markdown };
+		public enum OutputType { None, Txt, Rtf, Html, Md };
 
 		public bool NoCredit { get; set; }
 		public bool Untagged { get; set; }
@@ -122,7 +122,7 @@ namespace ChangeLogFormatter
 			///
 			/// Markdown
 			///
-			else if (_outputType == OutputType.Markdown)
+			else if (_outputType == OutputType.Md)
 			{
 				foreach (var tag in _data.OrderByDescending(x => x.Key.Date))
 				{

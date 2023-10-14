@@ -1,4 +1,9 @@
-﻿using System;
+﻿#if !NET5_0_OR_GREATER
+using System;
+using System.IO;
+using System.Linq;
+using System.Collections.Generic;
+#endif
 
 namespace ChangeLogFormatter
 {
@@ -14,33 +19,56 @@ namespace ChangeLogFormatter
 			if (args.ArgBool("rtf"))
 				type = GenerateReports.OutputType.Rtf;
 			if (args.ArgBool("md"))
-				type = GenerateReports.OutputType.Markdown;
-			if (args.ArgBool("text"))
-				type = GenerateReports.OutputType.Text;
+				type = GenerateReports.OutputType.Md;
+			if (args.ArgBool("txt"))
+				type = GenerateReports.OutputType.Txt;
 
 			var repoPath = args.Arg("repo") ?? ".";
-			var outFile = args.Where(x => !x.StartsWith("-") && x != repoPath);
+			var outFile = args.FirstOrDefault(x => !x.StartsWith("-") && x != repoPath);
 
 			var noCredit = args.ArgBool("nocredit");
 			var untagged = args.ArgBool("untagged");
 
+			// validate
 			var unknown = args.Unknown();
 
-			if(args.Length == 0 || unknown.Any())
+			if (args.Length == 0 || unknown.Any())
 			{
 				if(unknown.Any())
-					Console.WriteLine($"Error: Unknown argument: {string.Join(',', unknown)}");
+					Console.WriteLine($"Error: Unknown argument: {string.Join(",", unknown)}");
 
-				Console.WriteLine("Usage: ChangeLogFormatter -text | -rtf | -md | -html [-nocredit] [-untagged] [-repo path] [outfile]");
+				Console.WriteLine("Usage: ChangeLogFormatter -txt | -rtf | -md | -html [-nocredit] [-untagged] [-repo path] [outfile]");
 				return;
+			}
+
+			if(type == GenerateReports.OutputType.None)
+			{
+				Console.WriteLine("Error: Specify file format -txt | -rtf | -md | -html");
+				return;
+			}
+
+			if(outFile != null)
+			{
+				var ext = Path.GetExtension(outFile);
+
+				if (ext == string.Empty)
+				{
+					outFile += "." + type.ToString().ToLower();
+					Console.WriteLine($"Outfile: {outFile}");
+				}
+				else if(!ext.Substring(1).Equals(type.ToString(), StringComparison.InvariantCultureIgnoreCase))
+				{
+					Console.WriteLine($"Invalid extension {ext}");
+					return;
+				}
 			}
 			#endregion
 
 			try
 			{
-				using (TextWriter outStream = outFile.Any() ? new StreamWriter(outFile.Last()) : Console.Out)
+				using (TextWriter outStream = outFile != null ? new StreamWriter(outFile) : Console.Out)
 				{
-					var parser = new GenerateReports(type, outStream) 
+					var parser = new GenerateReports(type, outStream)
 					{
 						NoCredit = noCredit,
 						Untagged = untagged
