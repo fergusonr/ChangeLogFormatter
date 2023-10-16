@@ -5,6 +5,8 @@ using System.Linq;
 using System.Collections.Generic;
 #endif
 
+using System.Reflection;
+
 namespace ChangeLogFormatter
 {
 	public static class Program
@@ -28,6 +30,7 @@ namespace ChangeLogFormatter
 
 			var noCredit = args.ArgBool("nocredit");
 			var untagged = args.ArgBool("untagged");
+			var showVersion = args.ArgBool("version");
 
 			// validate
 			var unknown = args.Unknown();
@@ -41,7 +44,16 @@ namespace ChangeLogFormatter
 				return;
 			}
 
-			if(type == GenerateReports.OutputType.None)
+			if (showVersion)
+			{
+				var name = Assembly.GetExecutingAssembly().GetName();
+
+				var version = name.Version;
+				Console.WriteLine($"{name.Name} {version.Major}.{version.Build}.{version.Minor}.{version.MinorRevision}");
+				return;
+			}
+
+			if (type == GenerateReports.OutputType.None)
 			{
 				Console.WriteLine("Error: Specify file format -txt | -rtf | -md | -html");
 				return;

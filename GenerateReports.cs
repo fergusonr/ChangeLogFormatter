@@ -74,7 +74,7 @@ namespace ChangeLogFormatter
 				if (!_data.ContainsKey(currentTag))
 					_data[currentTag] = new List<string>();
 
-				_data[currentTag].Add(commit.Message);
+				_data[currentTag].Add(commit.Message.TrimEnd('\r', '\n'));
 			}
 
 			repo.Dispose();
