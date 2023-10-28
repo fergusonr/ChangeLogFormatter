@@ -26,36 +26,31 @@ namespace ChangeLogFormatter
 				type = GenerateReports.OutputType.Txt;
 
 			var repoPath = args.Arg("repo") ?? ".";
-			var outFile = args.FirstOrDefault(x => !x.StartsWith("-") && x != repoPath);
 
 			var noCredit = args.ArgBool("nocredit");
 			var untagged = args.ArgBool("untagged");
 			var showVersion = args.ArgBool("version");
 
+			var outFile = args.Arg("output");
+
 			// validate
-			var unknown = args.Unknown();
-
-			if (args.Length == 0 || unknown.Any())
-			{
-				if(unknown.Any())
-					Console.WriteLine($"Error: Unknown argument: {string.Join(",", unknown)}");
-
-				Console.WriteLine("Usage: ChangeLogFormatter -txt | -rtf | -md | -html [-nocredit] [-untagged] [-repo path] [outfile]");
+			if (!args.Check(out string message))
+			{ 
+				Console.WriteLine($"Error: {message}");
+				Console.WriteLine("Usage: ChangeLogFormatter --txt | --rtf | --md | --html [--nocredit] [--untagged] [--repo path] [--output filename]");
 				return;
 			}
 
 			if (showVersion)
 			{
 				var name = Assembly.GetExecutingAssembly().GetName();
-
-				var version = name.Version;
-				Console.WriteLine($"{name.Name} {version.Major}.{version.Build}.{version.Minor}.{version.MinorRevision}");
+				Console.WriteLine($"{name.Name} {name.Version.Major}.{name.Version.Build}.{name.Version.Minor}.{name.Version.MinorRevision}");
 				return;
 			}
 
 			if (type == GenerateReports.OutputType.None)
 			{
-				Console.WriteLine("Error: Specify file format -txt | -rtf | -md | -html");
+				Console.WriteLine("Error: Specify file format --txt | --rtf | --md | --html");
 				return;
 			}
 
@@ -98,26 +93,48 @@ namespace ChangeLogFormatter
 
 	internal static class ArgsExtensions
 	{
-		static List<string> _known = new List<string>();
+		private static readonly Dictionary<string, (bool Manditory, bool HasValue)> _known = new Dictionary<string, (bool, bool)>();
 
 		// for	"-searchKey value"	return "value"
-		internal static string Arg(this string[] args, string name)
+		internal static string Arg(this string[] args, string name, bool manditory = false)
 		{
-			_known.Add($"-{name}");
-			var index = Array.IndexOf(args, $"-{name}");
+			_known.Add($"--{name}", (manditory, true));
+			var index = Array.IndexOf(args, $"--{name}");
 			return index != -1 && index + 1 < args.Length ? args[index + 1] : null;
 		}
 
 		// Simple boolean arg		"-someoption"	return true
-		internal static bool ArgBool(this string[] args, string name)
+		internal static bool ArgBool(this string[] args, string name, bool manditory = false)
 		{
-			_known.Add($"-{name}");
-			return args.Contains($"-{name}");
+			_known.Add($"--{name}", (manditory, false));
+			return args.Contains($"--{name}");
 		}
 
-		internal static IEnumerable<string> Unknown(this string[] args)
+		/// <summary>
+		/// Check
+		/// </summary>
+		/// <param name="args"></param>
+		/// <returns></returns>
+		public static bool Check(this string[] args, out string message)
 		{
-			return args.Where(x => x.StartsWith("-")).Except(_known);
+			var unknown = args.Where(x => x.StartsWith("-")).Except(_known.Keys);
+
+			if (unknown.Any())
+			{
+				message = $"Unknown argument(s): {string.Join(", ", unknown)}";
+				return false;
+			}
+
+			var missing = _known.Where(x => x.Value.Manditory).Select(x => x.Key).Except(args);
+
+			if (missing.Any())
+			{
+				message = $"Missing argument(s): {string.Join(", ", missing)}";
+				return false;
+			}
+
+			message = "";
+			return true;
 		}
 	}
 }

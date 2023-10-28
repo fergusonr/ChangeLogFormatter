@@ -80,7 +80,7 @@ namespace ChangeLogFormatter
 			repo.Dispose();
 
 			if (_data.Count == 0)
-				throw new Exception("No tags found");
+				throw new Exception("No tags found. Run with -untagged");
 
 			///
 			/// Generate log report

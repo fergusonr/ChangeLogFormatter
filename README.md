@@ -2,7 +2,7 @@
 
 Simple git log formatter in C#
 
-&nbsp;&nbsp;**ChangeLogFormatter -text | -md | -rtf | -html [-nocredit]  [-untagged] [-repo path] [outfile]** 
+&nbsp;&nbsp;**ChangeLogFormatter --text | --md | --rtf | --html [--nocredit]  [--untagged] [--repo path] [--output outfile]** 
 
 
 
