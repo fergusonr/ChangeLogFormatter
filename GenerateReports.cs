@@ -1,12 +1,6 @@
 ﻿using System;
 using System.Drawing;
 
-#if !NET5_0_OR_GREATER
-using System.IO;
-using System.Linq;
-using System.Collections.Generic;
-#endif
-
 using LibGit2Sharp;
 
 namespace ChangeLogFormatter
@@ -18,13 +12,18 @@ namespace ChangeLogFormatter
 		public bool NoCredit { get; set; }
 		public bool Untagged { get; set; }
 
-		private struct Tag
+		internal class Data
+		{
+			internal string Name; // branchname
+			internal Dictionary<Tag, List<string>> Commits = new Dictionary<Tag, List<string>>();
+		}
+		internal struct Tag
 		{
 			internal string Name;
 			internal DateTime Date;
 		}
 
-		private readonly Dictionary<Tag, List<string>> _data = new Dictionary<Tag, List<string>>();
+		private readonly Data _data = new Data();
 		private readonly OutputType _outputType;
 		private readonly TextWriter _outStream;
 		private readonly bool _stdout;
@@ -44,13 +43,26 @@ namespace ChangeLogFormatter
 		/// <summary>
 		/// Format git log
 		/// </summary>
-		public bool Generate(string repoPath)
+		public bool Generate(string repoPath, string namedBranch)
 		{
 			var repo = new Repository(repoPath);
+			Branch branch = null;
+
+			if (namedBranch != null) // specified
+			{
+				branch = repo.Branches.FirstOrDefault(x => x.FriendlyName == namedBranch);
+
+				if (branch == null)
+					throw new Exception($"Branch {namedBranch} not found");
+			}
+			else
+				branch = repo.Branches.First(); // master/main
+
+			_data.Name = branch.FriendlyName;
 
 			var currentTag = new Tag();
 
-			foreach (var commit in repo.Commits.OrderByDescending(x => x.Author.When))
+			foreach (var commit in branch.Commits.OrderByDescending(x => x.Author.When))
 			{
 				var tag = repo.Tags.FirstOrDefault(x => commit.Sha == x.Reference.TargetIdentifier);
 
@@ -71,16 +83,16 @@ namespace ChangeLogFormatter
 						continue;// skip untagged commits
 				}
 
-				if (!_data.ContainsKey(currentTag))
-					_data[currentTag] = new List<string>();
+				if (!_data.Commits.ContainsKey(currentTag))
+					_data.Commits[currentTag] = new List<string>();
 
-				_data[currentTag].Add(commit.Message.TrimEnd('\r', '\n'));
+				_data.Commits[currentTag].Add(commit.Message.TrimEnd('\r', '\n'));
 			}
 
 			repo.Dispose();
 
-			if (_data.Count == 0)
-				throw new Exception("No tags found. Run with -untagged");
+			if (_data.Commits.Count == 0)
+				throw new Exception("No tags found. Run with --untagged");
 
 			///
 			/// Generate log report
@@ -100,7 +112,7 @@ namespace ChangeLogFormatter
 			{
 				_outStream.WriteLine("<html>\n<body>");
 
-				foreach (var tag in _data.OrderByDescending(x => x.Key.Date))
+				foreach (var tag in _data.Commits.OrderByDescending(x => x.Key.Date))
 				{
 					var col = tag.Key.Name == _untagged ? bColU : bCol;
 
@@ -113,6 +125,8 @@ namespace ChangeLogFormatter
 					_outStream.WriteLine("</table>\n<br>");
 				}
 
+				_outStream.WriteLine($"Branch: {_data.Name}<br>");
+
 				if (!NoCredit)
 					_outStream.WriteLine($@"{text}: <a href=""{gitUrl}"">{gitUrl}</a>");
 
@@ -124,7 +138,7 @@ namespace ChangeLogFormatter
 			///
 			else if (_outputType == OutputType.Md)
 			{
-				foreach (var tag in _data.OrderByDescending(x => x.Key.Date))
+				foreach (var tag in _data.Commits.OrderByDescending(x => x.Key.Date))
 				{
 					var col = tag.Key.Name == _untagged ? bColU : bCol;
 
@@ -135,6 +149,8 @@ namespace ChangeLogFormatter
 				}
 
 				_outStream.WriteLine();
+
+				_outStream.WriteLine($"Branch: {_data.Name}<br>");
 
 				if (!NoCredit)
 					_outStream.WriteLine($"{text}: [{gitUrl}]({gitUrl})");
@@ -148,7 +164,7 @@ namespace ChangeLogFormatter
 				_outStream.WriteLine(@"{\rtf1\ansi{\fonttbl\f0\fCourier New;}");
 				_outStream.WriteLine($@"{{\colortbl;\red{fCol.R}\green{fCol.G}\blue{fCol.B};\red{bCol.R}\green{bCol.G}\blue{bCol.B};\red{bColU.R}\green{bColU.G}\blue{bColU.B};}}");
 
-				foreach (var tag in _data.OrderByDescending(x => x.Key.Date))
+				foreach (var tag in _data.Commits.OrderByDescending(x => x.Key.Date))
 				{
 					var col = tag.Key.Name == _untagged ? 3 : 2;
 
@@ -165,7 +181,9 @@ namespace ChangeLogFormatter
 					_outStream.WriteLine(@"\par}");
 				}
 
-				if(!NoCredit)
+				_outStream.WriteLine($@"\fs20Branch: {_data.Name}\line");
+
+				if (!NoCredit)
 					_outStream.WriteLine($@"\fs20{text}: {{\field{{\*\fldinst HYPERLINK ""{gitUrl}""}}}}\line");
 
 				_outStream.WriteLine("}");
@@ -176,7 +194,7 @@ namespace ChangeLogFormatter
 			///
 			else
 			{
-				foreach (var tag in _data.OrderByDescending(x => x.Key.Date))
+				foreach (var tag in _data.Commits.OrderByDescending(x => x.Key.Date))
 				{
 					if (_stdout)
 					{
@@ -208,6 +226,8 @@ namespace ChangeLogFormatter
 					_outStream.WriteLine();
 				}
 
+				_outStream.WriteLine($"Branch: {_data.Name}");
+
 				if (!NoCredit)
 				{
 					_outStream.WriteLine();
@@ -215,7 +235,7 @@ namespace ChangeLogFormatter
 				}
 			}
 
-			_data.Clear();
+			_data.Commits.Clear();
 
 			return true;
 		}

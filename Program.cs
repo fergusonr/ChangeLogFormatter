@@ -1,10 +1,4 @@
-﻿#if !NET5_0_OR_GREATER
-using System;
-using System.IO;
-using System.Linq;
-using System.Collections.Generic;
-#endif
-
+﻿using System;
 using System.Reflection;
 
 namespace ChangeLogFormatter
@@ -26,19 +20,30 @@ namespace ChangeLogFormatter
 				type = GenerateReports.OutputType.Txt;
 
 			var repoPath = args.Arg("repo") ?? ".";
-
+			var branch = args.Arg("branch");
 			var noCredit = args.ArgBool("nocredit");
 			var untagged = args.ArgBool("untagged");
 			var showVersion = args.ArgBool("version");
 
 			var outFile = args.Arg("output");
 
+			if(args.Length == 0)
+			{
+				ShowUsage();
+				return;
+			}
+
 			// validate
 			if (!args.Check(out string message))
-			{ 
+			{
 				Console.WriteLine($"Error: {message}");
-				Console.WriteLine("Usage: ChangeLogFormatter --txt | --rtf | --md | --html [--nocredit] [--untagged] [--repo path] [--output filename]");
+				ShowUsage();
 				return;
+			}
+
+			void ShowUsage()
+			{
+				Console.WriteLine("Usage: ChangeLogFormatter --txt | --rtf | --md | --html [--nocredit] [--untagged] [--repo path] [--branch name] [--output filename]");
 			}
 
 			if (showVersion)
@@ -81,7 +86,7 @@ namespace ChangeLogFormatter
 						Untagged = untagged
 					};
 
-					parser.Generate(repoPath);
+					parser.Generate(repoPath, branch);
 				}
 			}
 			catch (Exception e)
