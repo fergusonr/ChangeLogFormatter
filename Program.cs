@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace ChangeLogFormatter
+namespace ChangeLogGenerator
 {
 	public static class Program
 	{
@@ -43,7 +43,7 @@ namespace ChangeLogFormatter
 
 			void ShowUsage()
 			{
-				Console.WriteLine("Usage: ChangeLogFormatter --txt | --rtf | --md | --html [--nocredit] [--untagged] [--repo path] [--branch name] [--output filename]");
+				Console.WriteLine($"Usage: {typeof(Program).Namespace} --txt | --rtf | --md | --html [--nocredit] [--untagged] [--repo path] [--branch name] [--output filename]");
 			}
 
 			if (showVersion)

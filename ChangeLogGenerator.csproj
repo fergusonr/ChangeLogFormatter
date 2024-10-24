@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
-    <RootNamespace>ChangeLogFormatter_NetCore</RootNamespace>
+    <RootNamespace>ChangeLogGenerator</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <BaseIntermediateOutputPath>obj</BaseIntermediateOutputPath>

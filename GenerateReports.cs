@@ -3,7 +3,7 @@ using System.Drawing;
 
 using LibGit2Sharp;
 
-namespace ChangeLogFormatter
+namespace ChangeLogGenerator
 {
 	public class GenerateReports
 	{
@@ -98,7 +98,7 @@ namespace ChangeLogFormatter
 			/// Generate log report
 			///
 			const string text = "Generated with";
-			const string gitUrl = "https://github.com/fergusonr/ChangeLogFormatter";
+			string gitUrl = $"https://github.com/fergusonr/{typeof(GenerateReports).Namespace}";
 
 			// tag version banner
 			var bCol = Color.DarkGreen;
@@ -175,6 +175,7 @@ namespace ChangeLogFormatter
 					foreach (var message in tag.Value)
 					{
 						var messageMod = message.Count(x => x == '\n') > 1 ? message.Replace("\n", "\\line\n") : message;
+						messageMod = messageMod.Replace("\\", "\\'5c"); // Escape rtf identifer '\'
 						_outStream.WriteLine($@"\bullet  {messageMod}\line");
 					}
 
