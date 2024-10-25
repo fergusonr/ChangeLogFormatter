@@ -20,12 +20,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="obj48\**" />
     <Compile Remove="obj\**" />
     <Compile Remove="Properties\**" />
     <Compile Remove="Test\**" />
+    <EmbeddedResource Remove="obj48\**" />
     <EmbeddedResource Remove="obj\**" />
     <EmbeddedResource Remove="Properties\**" />
     <EmbeddedResource Remove="Test\**" />
+    <None Remove="obj48\**" />
     <None Remove="obj\**" />
     <None Remove="Properties\**" />
     <None Remove="Test\**" />
@@ -34,6 +37,7 @@
   <ItemGroup>
     <None Remove=".gitattributes" />
     <None Remove=".gitignore" />
+    <None Remove="App.config" />
     <None Remove="Directory.Build.props" />
   </ItemGroup>
 

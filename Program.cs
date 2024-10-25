@@ -1,6 +1,12 @@
 ﻿using System;
 using System.Reflection;
 
+#if !NET5_0_OR_GREATER
+using System.IO;
+using System.Linq;
+using System.Collections.Generic;
+#endif
+
 namespace ChangeLogGenerator
 {
 	public static class Program
@@ -8,21 +14,20 @@ namespace ChangeLogGenerator
 		static void Main(string[] args)
 		{
 			#region commandline args
-			var type = GenerateReports.OutputType.None;
+			var type = ReportGenerator.OutputType.None;
 
 			if (args.ArgBool("html"))
-				type = GenerateReports.OutputType.Html;
+				type = ReportGenerator.OutputType.Html;
 			if (args.ArgBool("rtf"))
-				type = GenerateReports.OutputType.Rtf;
+				type = ReportGenerator.OutputType.Rtf;
 			if (args.ArgBool("md"))
-				type = GenerateReports.OutputType.Md;
-			if (args.ArgBool("txt"))
-				type = GenerateReports.OutputType.Txt;
+				type = ReportGenerator.OutputType.Md;
+			if (args.ArgBool("txt") || args.ArgBool("text"))
+				type = ReportGenerator.OutputType.Txt;
 
 			var repoPath = args.Arg("repo") ?? ".";
 			var branch = args.Arg("branch");
 			var noCredit = args.ArgBool("nocredit");
-			var untagged = args.ArgBool("untagged");
 			var showVersion = args.ArgBool("version");
 
 			var outFile = args.Arg("output");
@@ -36,26 +41,26 @@ namespace ChangeLogGenerator
 			// validate
 			if (!args.Check(out string message))
 			{
-				Console.WriteLine($"Error: {message}");
+				Console.Error.WriteLine($"Error: {message}");
 				ShowUsage();
 				return;
 			}
 
 			void ShowUsage()
 			{
-				Console.WriteLine($"Usage: {typeof(Program).Namespace} --txt | --rtf | --md | --html [--nocredit] [--untagged] [--repo path] [--branch name] [--output filename]");
+				Console.Error.WriteLine($"Usage: {typeof(Program).Namespace} --txt | --rtf | --md | --html [--nocredit] [--repo path] [--branch name] [--output filename]");
 			}
 
 			if (showVersion)
 			{
 				var name = Assembly.GetExecutingAssembly().GetName();
-				Console.WriteLine($"{name.Name} {name.Version.Major}.{name.Version.Build}.{name.Version.Minor}.{name.Version.MinorRevision}");
+				Console.Error.WriteLine($"{name.Name} {name.Version.Major}.{name.Version.Build}.{name.Version.Minor}.{name.Version.MinorRevision}");
 				return;
 			}
 
-			if (type == GenerateReports.OutputType.None)
+			if (type == ReportGenerator.OutputType.None)
 			{
-				Console.WriteLine("Error: Specify file format --txt | --rtf | --md | --html");
+				Console.Error.WriteLine("Error: Specify file format --txt | --rtf | --md | --html");
 				return;
 			}
 
@@ -66,11 +71,11 @@ namespace ChangeLogGenerator
 				if (ext == string.Empty)
 				{
 					outFile += "." + type.ToString().ToLower();
-					Console.WriteLine($"Outfile: {outFile}");
+					Console.Error.WriteLine($"Outfile: {outFile}");
 				}
 				else if(!ext.Substring(1).Equals(type.ToString(), StringComparison.InvariantCultureIgnoreCase))
 				{
-					Console.WriteLine($"Invalid extension {ext}");
+					Console.Error.WriteLine($"Invalid extension {ext}");
 					return;
 				}
 			}
@@ -78,15 +83,11 @@ namespace ChangeLogGenerator
 
 			try
 			{
-				using (TextWriter outStream = outFile != null ? new StreamWriter(outFile) : Console.Out)
-				{
-					var parser = new GenerateReports(type, outStream)
-					{
-						NoCredit = noCredit,
-						Untagged = untagged
-					};
+				var parser = new ReportGenerator(repoPath, branch) { NoCredit = noCredit };
 
-					parser.Generate(repoPath, branch);
+				using (TextWriter outStream = outFile == null ?  Console.Out : new StreamWriter(outFile))
+				{
+					parser.Generate(type, outStream);
 				}
 			}
 			catch (Exception e)

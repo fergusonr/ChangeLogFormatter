@@ -1,0 +1,6 @@
+<Project>
+    <!-- $(TargetFramework) not yet defined at this time -->
+    <PropertyGroup Condition='$(MSBuildProjectFile.Contains("48"))'>
+   <BaseIntermediateOutputPath>obj48\</BaseIntermediateOutputPath>
+ </PropertyGroup>
+</Project>
