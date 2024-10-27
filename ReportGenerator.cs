@@ -119,7 +119,7 @@ namespace ChangeLogGenerator
 					outStream.WriteLine($"<table>\n<tr><td><b>{tag.Key.Date.ToLongDateString()}</b></td></tr>");
 
 					foreach (var message in tag.Value)
-						outStream.WriteLine($"<tr><td>&nbsp;&nbsp;{message}</td></tr>");
+						outStream.WriteLine($"<tr><td>&nbsp;&#x2022;&nbsp;{message}</td></tr>");
 
 					outStream.WriteLine("</table>\n<br>");
 				}

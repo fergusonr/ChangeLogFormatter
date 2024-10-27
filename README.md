@@ -2,7 +2,7 @@
 
 Simple git changelog generator in C#
 
-&nbsp;&nbsp;**ChangeLogGenerator --txt | --md | --rtf | --html [--nocredit]  [--untagged] [--repo path] [--branch name] [--output outfile]** 
+&nbsp;&nbsp;**ChangeLogGenerator --txt | --md | --rtf | --html [--nocredit]  [--repo path] [--branch name] [--output outfile]** 
 
 ```
 % ChangeLogGenerator --rtf --output ChangeLog.rtf
